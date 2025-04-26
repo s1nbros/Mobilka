@@ -45,8 +45,15 @@ const categories = [
 export default function HomeScreen() {
   const router = useRouter();
 
+  const handleCategoryPress = (categoryId: string) => {
+    router.push({
+      pathname: '/lesson/[id]',
+      params: { id: categoryId }
+    });
+  };
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       <View style={styles.header}>
         <Text style={styles.title}>Learn Russian</Text>
         <Text style={styles.subtitle}>Start your journey to fluency</Text>
@@ -72,7 +79,7 @@ export default function HomeScreen() {
           <TouchableOpacity
             key={category.id}
             style={[styles.categoryCard, { backgroundColor: category.color }]}
-            onPress={() => router.push(`/lesson/${category.id}`)}
+            onPress={() => handleCategoryPress(category.id)}
           >
             <Ionicons name={category.icon as any} size={32} color="white" />
             <Text style={styles.categoryTitle}>{category.title}</Text>
@@ -92,6 +99,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
+  },
+  contentContainer: {
+    paddingBottom: 20,
   },
   header: {
     padding: 20,

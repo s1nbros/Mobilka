@@ -1,89 +1,65 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { Ionicons } from '@expo/vector-icons';
 
-// Sample lesson data - in a real app, this would come from a database or API
 const lessons = {
   basics: [
-    {
-      id: 1,
-      type: 'word',
-      question: 'Hello',
-      answer: 'Привет',
-      options: ['Привет', 'Пока', 'Спасибо', 'Да'],
-    },
-    {
-      id: 2,
-      type: 'translation',
-      question: 'How are you?',
-      answer: 'Как дела?',
-      options: ['Как дела?', 'Что делаешь?', 'Где ты?', 'Кто ты?'],
-    },
+    { id: 1, title: 'Alphabet', description: 'Learn the Russian alphabet', completed: false },
+    { id: 2, title: 'Numbers', description: 'Learn numbers 1-10', completed: false },
+    { id: 3, title: 'Colors', description: 'Basic colors in Russian', completed: false },
   ],
   greetings: [
-    {
-      id: 1,
-      type: 'word',
-      question: 'Good morning',
-      answer: 'Доброе утро',
-      options: ['Доброе утро', 'Добрый день', 'Добрый вечер', 'Спокойной ночи'],
-    },
+    { id: 1, title: 'Hello & Goodbye', description: 'Basic greetings', completed: false },
+    { id: 2, title: 'Introductions', description: 'How to introduce yourself', completed: false },
+    { id: 3, title: 'Polite Phrases', description: 'Common polite expressions', completed: false },
   ],
+  food: [
+    { id: 1, title: 'Food Vocabulary', description: 'Common food items', completed: false },
+    { id: 2, title: 'Ordering Food', description: 'Restaurant phrases', completed: false },
+    { id: 3, title: 'Drinks', description: 'Beverages and ordering', completed: false },
+  ],
+  travel: [
+    { id: 1, title: 'Directions', description: 'Asking for directions', completed: false },
+    { id: 2, title: 'Transportation', description: 'Public transport phrases', completed: false },
+    { id: 3, title: 'Accommodation', description: 'Hotel and booking phrases', completed: false },
+  ],
+};
+
+const categoryColors = {
+  basics: '#4CAF50',
+  greetings: '#2196F3',
+  food: '#FF9800',
+  travel: '#9C27B0',
 };
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams();
-  const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [score, setScore] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-
-  const lessonData = lessons[id as keyof typeof lessons] || [];
-  const currentExercise = lessonData[currentQuestion];
-
-  const handleAnswer = (selectedAnswer: string) => {
-    if (selectedAnswer === currentExercise.answer) {
-      setScore(score + 1);
-    }
-    setShowAnswer(true);
-  };
-
-  const nextQuestion = () => {
-    if (currentQuestion < lessonData.length - 1) {
-      setCurrentQuestion(currentQuestion + 1);
-      setShowAnswer(false);
-    }
-  };
+  const categoryId = id as string;
+  const categoryLessons = lessons[categoryId as keyof typeof lessons] || [];
+  const categoryColor = categoryColors[categoryId as keyof typeof categoryColors] || '#4CAF50';
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Lesson: {id}</Text>
-        <Text style={styles.progress}>Question {currentQuestion + 1} of {lessonData.length}</Text>
+      <View style={[styles.header, { backgroundColor: categoryColor }]}>
+        <Text style={styles.title}>{categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}</Text>
+        <Text style={styles.subtitle}>Select a lesson to begin</Text>
       </View>
 
-      <View style={styles.questionContainer}>
-        <Text style={styles.question}>{currentExercise.question}</Text>
-        
-        {currentExercise.options.map((option, index) => (
+      <View style={styles.lessonsContainer}>
+        {categoryLessons.map((lesson) => (
           <TouchableOpacity
-            key={index}
-            style={[
-              styles.option,
-              showAnswer && option === currentExercise.answer && styles.correctAnswer,
-              showAnswer && option !== currentExercise.answer && styles.wrongAnswer,
-            ]}
-            onPress={() => handleAnswer(option)}
-            disabled={showAnswer}
+            key={lesson.id}
+            style={[styles.lessonCard, { borderLeftColor: categoryColor }]}
           >
-            <Text style={styles.optionText}>{option}</Text>
+            <View style={styles.lessonHeader}>
+              <Text style={styles.lessonTitle}>{lesson.title}</Text>
+              {lesson.completed && (
+                <Ionicons name="checkmark-circle" size={24} color={categoryColor} />
+              )}
+            </View>
+            <Text style={styles.lessonDescription}>{lesson.description}</Text>
           </TouchableOpacity>
         ))}
-
-        {showAnswer && (
-          <TouchableOpacity style={styles.nextButton} onPress={nextQuestion}>
-            <Text style={styles.nextButtonText}>Next Question</Text>
-          </TouchableOpacity>
-        )}
       </View>
     </ScrollView>
   );
@@ -96,60 +72,47 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e0e0e0',
+    paddingTop: 40,
   },
   title: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#333',
+    color: 'white',
   },
-  progress: {
+  subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: 'white',
     marginTop: 5,
+    opacity: 0.9,
   },
-  questionContainer: {
+  lessonsContainer: {
+    padding: 16,
+  },
+  lessonCard: {
+    backgroundColor: 'white',
     padding: 20,
-  },
-  question: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 20,
-    color: '#333',
-  },
-  option: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
     elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 1.41,
   },
-  optionText: {
-    fontSize: 16,
+  lessonHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  lessonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
     color: '#333',
   },
-  correctAnswer: {
-    backgroundColor: '#4CAF50',
-  },
-  wrongAnswer: {
-    backgroundColor: '#FF5252',
-  },
-  nextButton: {
-    backgroundColor: '#2196F3',
-    padding: 15,
-    borderRadius: 8,
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  nextButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+  lessonDescription: {
+    fontSize: 14,
+    color: '#666',
   },
 }); 
