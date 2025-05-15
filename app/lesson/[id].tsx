@@ -1,67 +1,157 @@
-import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Animated } from 'react-native';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState, useRef, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
+import LessonExercise from '@/components/LessonExercise';
 
-const lessons = {
-  basics: [
-    { id: 1, title: 'Alphabet', description: 'Learn the Russian alphabet', completed: false },
-    { id: 2, title: 'Numbers', description: 'Learn numbers 1-10', completed: false },
-    { id: 3, title: 'Colors', description: 'Basic colors in Russian', completed: false },
-  ],
-  greetings: [
-    { id: 1, title: 'Hello & Goodbye', description: 'Basic greetings', completed: false },
-    { id: 2, title: 'Introductions', description: 'How to introduce yourself', completed: false },
-    { id: 3, title: 'Polite Phrases', description: 'Common polite expressions', completed: false },
-  ],
-  food: [
-    { id: 1, title: 'Food Vocabulary', description: 'Common food items', completed: false },
-    { id: 2, title: 'Ordering Food', description: 'Restaurant phrases', completed: false },
-    { id: 3, title: 'Drinks', description: 'Beverages and ordering', completed: false },
-  ],
-  travel: [
-    { id: 1, title: 'Directions', description: 'Asking for directions', completed: false },
-    { id: 2, title: 'Transportation', description: 'Public transport phrases', completed: false },
-    { id: 3, title: 'Accommodation', description: 'Hotel and booking phrases', completed: false },
-  ],
-};
-
-const categoryColors = {
-  basics: '#4CAF50',
-  greetings: '#2196F3',
-  food: '#FF9800',
-  travel: '#9C27B0',
+// Sample lesson data
+const lessonData = {
+  basics: {
+    title: 'Basics',
+    exercises: [
+      {
+        type: 'multiple-choice',
+        question: 'What is "hello" in Russian?',
+        correctAnswer: 'привет',
+        options: ['привет', 'пока', 'спасибо', 'пожалуйста'],
+      },
+      {
+        type: 'translation',
+        question: 'Translate: "Thank you"',
+        correctAnswer: 'спасибо',
+        hint: 'It starts with "сп"',
+      },
+      {
+        type: 'multiple-choice',
+        question: 'What is "goodbye" in Russian?',
+        correctAnswer: 'пока',
+        options: ['привет', 'пока', 'спасибо', 'пожалуйста'],
+      },
+    ],
+  },
+  greetings: {
+    title: 'Greetings',
+    exercises: [
+      {
+        type: 'multiple-choice',
+        question: 'How do you say "Good morning"?',
+        correctAnswer: 'доброе утро',
+        options: ['доброе утро', 'добрый день', 'добрый вечер', 'спокойной ночи'],
+      },
+      {
+        type: 'translation',
+        question: 'Translate: "Good evening"',
+        correctAnswer: 'добрый вечер',
+        hint: 'It starts with "добр"',
+      },
+    ],
+  },
 };
 
 export default function LessonScreen() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
+  const [currentExercise, setCurrentExercise] = useState(0);
+  const [score, setScore] = useState(0);
+  const [completed, setCompleted] = useState(false);
+  const progressAnimation = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    console.log('Lesson ID:', id);
+  }, [id]);
+
   const categoryId = id as string;
-  const categoryLessons = lessons[categoryId as keyof typeof lessons] || [];
-  const categoryColor = categoryColors[categoryId as keyof typeof categoryColors] || '#4CAF50';
+  const lesson = lessonData[categoryId as keyof typeof lessonData];
+  const totalExercises = lesson?.exercises.length || 0;
+
+  const handleExerciseComplete = (correct: boolean) => {
+    if (correct) {
+      setScore(score + 1);
+    }
+
+    if (currentExercise < totalExercises - 1) {
+      setCurrentExercise(currentExercise + 1);
+      Animated.timing(progressAnimation, {
+        toValue: (currentExercise + 1) / totalExercises,
+        duration: 300,
+        useNativeDriver: false,
+      }).start();
+    } else {
+      setCompleted(true);
+    }
+  };
+
+  const handleContinue = () => {
+    router.back();
+  };
+
+  if (!lesson) {
+    console.log('Lesson not found for ID:', categoryId);
+    return (
+      <View style={styles.container}>
+        <Text style={styles.errorText}>Lesson not found</Text>
+        <TouchableOpacity 
+          style={styles.backButton} 
+          onPress={() => router.back()}
+        >
+          <Text style={styles.backButtonText}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (completed) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.completionContainer}>
+          <Ionicons name="trophy" size={80} color="#FFD700" />
+          <Text style={styles.completionTitle}>Lesson Complete!</Text>
+          <Text style={styles.completionScore}>
+            Score: {score}/{totalExercises}
+          </Text>
+          <TouchableOpacity style={styles.continueButton} onPress={handleContinue}>
+            <Text style={styles.continueButtonText}>Continue</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.header, { backgroundColor: categoryColor }]}>
-        <Text style={styles.title}>{categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}</Text>
-        <Text style={styles.subtitle}>Select a lesson to begin</Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="white" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>{lesson.title}</Text>
+        <View style={styles.progressContainer}>
+          <Text style={styles.progressText}>
+            {currentExercise + 1}/{totalExercises}
+          </Text>
+        </View>
       </View>
 
-      <View style={styles.lessonsContainer}>
-        {categoryLessons.map((lesson) => (
-          <TouchableOpacity
-            key={lesson.id}
-            style={[styles.lessonCard, { borderLeftColor: categoryColor }]}
-          >
-            <View style={styles.lessonHeader}>
-              <Text style={styles.lessonTitle}>{lesson.title}</Text>
-              {lesson.completed && (
-                <Ionicons name="checkmark-circle" size={24} color={categoryColor} />
-              )}
-            </View>
-            <Text style={styles.lessonDescription}>{lesson.description}</Text>
-          </TouchableOpacity>
-        ))}
+      <View style={styles.progressBarContainer}>
+        <Animated.View 
+          style={[
+            styles.progressBar,
+            {
+              width: progressAnimation.interpolate({
+                inputRange: [0, 1],
+                outputRange: ['0%', '100%'],
+              }),
+            },
+          ]}
+        />
       </View>
-    </ScrollView>
+
+      <ScrollView style={styles.content}>
+        <LessonExercise
+          exercise={lesson.exercises[currentExercise]}
+          onComplete={handleExerciseComplete}
+        />
+      </ScrollView>
+    </View>
   );
 }
 
@@ -71,48 +161,86 @@ const styles = StyleSheet.create({
     backgroundColor: '#f5f5f5',
   },
   header: {
+    backgroundColor: '#4CAF50',
     padding: 20,
     paddingTop: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: 'white',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: 'white',
-    marginTop: 5,
-    opacity: 0.9,
-  },
-  lessonsContainer: {
-    padding: 16,
-  },
-  lessonCard: {
-    backgroundColor: 'white',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 16,
-    borderLeftWidth: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
-  },
-  lessonHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
-  lessonTitle: {
-    fontSize: 18,
+  backButton: {
+    padding: 8,
+  },
+  headerTitle: {
+    color: 'white',
+    fontSize: 20,
     fontWeight: 'bold',
-    color: '#333',
   },
-  lessonDescription: {
+  progressContainer: {
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 12,
+  },
+  progressText: {
+    color: 'white',
     fontSize: 14,
+  },
+  progressBarContainer: {
+    height: 4,
+    backgroundColor: '#e0e0e0',
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#4CAF50',
+  },
+  content: {
+    flex: 1,
+  },
+  completionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  completionTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  completionScore: {
+    fontSize: 18,
     color: '#666',
+    marginBottom: 30,
+  },
+  continueButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+  },
+  continueButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#666',
+    textAlign: 'center',
+    marginTop: 20,
+  },
+  backButton: {
+    backgroundColor: '#4CAF50',
+    padding: 15,
+    borderRadius: 8,
+    marginTop: 20,
+    alignSelf: 'center',
+  },
+  backButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 }); 

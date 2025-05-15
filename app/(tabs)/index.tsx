@@ -46,10 +46,8 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const handleCategoryPress = (categoryId: string) => {
-    router.push({
-      pathname: '/lesson/[id]',
-      params: { id: categoryId }
-    });
+    console.log('Navigating to lesson:', categoryId);
+    router.push(`/lesson/${categoryId}`);
   };
 
   return (
