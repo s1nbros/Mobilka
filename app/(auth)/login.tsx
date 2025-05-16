@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -27,6 +28,26 @@ export default function LoginScreen() {
     }
   };
 
+  const createTestAccount = async () => {
+    const testUser = {
+      email: 'test@example.com',
+      password: 'test1234'
+    };
+    await AsyncStorage.setItem('user', JSON.stringify(testUser));
+    alert('Test account created!');
+  };
+
+  useEffect(() => {
+    const createTestAccount = async () => {
+      await AsyncStorage.setItem('user', JSON.stringify({
+        email: 'test@example.com',
+        password: 'test1234'
+      }));
+      // alert('Test account created!'); // Optional
+    };
+    createTestAccount();
+  }, []);
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Welcome Back</Text>
@@ -48,7 +69,6 @@ export default function LoginScreen() {
           onChangeText={setPassword}
           secureTextEntry
         />
-
         <TouchableOpacity
           style={[styles.button, isLoading && styles.buttonDisabled]}
           onPress={handleLogin}
@@ -64,6 +84,9 @@ export default function LoginScreen() {
           onPress={() => router.push('/(auth)/signup')}
         >
           <Text style={styles.linkText}>Don't have an account? Sign up</Text>
+        </TouchableOpacity>
+        <TouchableOpacity onPress={createTestAccount} style={{ marginTop: 20 }}>
+          <Text style={{ color: 'blue' }}>Create Test Account</Text>
         </TouchableOpacity>
       </View>
     </View>
