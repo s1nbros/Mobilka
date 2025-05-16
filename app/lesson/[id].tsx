@@ -1,67 +1,360 @@
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { useState, useEffect } from 'react';
 
-const lessons = {
-  basics: [
-    { id: 1, title: 'Alphabet', description: 'Learn the Russian alphabet', completed: false },
-    { id: 2, title: 'Numbers', description: 'Learn numbers 1-10', completed: false },
-    { id: 3, title: 'Colors', description: 'Basic colors in Russian', completed: false },
-  ],
-  greetings: [
-    { id: 1, title: 'Hello & Goodbye', description: 'Basic greetings', completed: false },
-    { id: 2, title: 'Introductions', description: 'How to introduce yourself', completed: false },
-    { id: 3, title: 'Polite Phrases', description: 'Common polite expressions', completed: false },
-  ],
-  food: [
-    { id: 1, title: 'Food Vocabulary', description: 'Common food items', completed: false },
-    { id: 2, title: 'Ordering Food', description: 'Restaurant phrases', completed: false },
-    { id: 3, title: 'Drinks', description: 'Beverages and ordering', completed: false },
-  ],
-  travel: [
-    { id: 1, title: 'Directions', description: 'Asking for directions', completed: false },
-    { id: 2, title: 'Transportation', description: 'Public transport phrases', completed: false },
-    { id: 3, title: 'Accommodation', description: 'Hotel and booking phrases', completed: false },
-  ],
+const learningData = {
+   basics: {
+    title: 'Basics',
+    color: '#4CAF50',
+    description: 'Start with Russian basics',
+    levels: [
+      {
+        id: 'alphabet',
+        title: 'Level 1',
+        lessons: [
+          { 
+            id: 1, 
+            title: 'Letters A-G', 
+            description: 'Learn first letters',
+            tasks: [
+              {
+                id: 1,
+                question: 'A',
+                answer: 'А',
+                options: ['А', 'Б', 'В', 'Г']
+              },
+              {
+                id: 2,
+                question: 'B',
+                answer: 'Б',
+                options: ['А', 'Б', 'В', 'Г']
+              },
+              {
+                id: 3,
+                question: 'V',
+                answer: 'В',
+                options: ['В', 'Г', 'Д', 'Ж']
+              }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Letters D-Z',
+            description: 'Next set of letters',
+            tasks: [
+              {
+                id: 1,
+                question: 'D',
+                answer: 'Д',
+                options: ['Д', 'Е', 'Ж', 'З']
+              },
+              {
+                id: 2,
+                question: 'Z',
+                answer: 'З',
+                options: ['Ж', 'З', 'И', 'Й']
+              }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Vowels',
+            description: 'Russian vowel letters',
+            tasks: [
+              {
+                id: 1,
+                question: 'A',
+                answer: 'А',
+                options: ['А', 'Б', 'В', 'Г']
+              }
+            ]
+          },
+          {
+            id: 4,
+            title: 'Special Letters',
+            description: 'Unique Russian characters',
+            tasks: [
+              {
+                id: 1,
+                question: 'Soft sign',
+                answer: 'Ь',
+                options: ['Ь', 'Ъ', 'Ы', 'Э']
+              },
+              {
+                id: 2,
+                question: 'Hard sign',
+                answer: 'Ъ',
+                options: ['Ъ', 'Ь', 'Ы', 'Э']
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  greetings: {
+    title: 'Greetings',
+    color: '#2196F3',
+    description: 'Common greeting phrases',
+    levels: [
+      {
+        id: 'basic-greetings',
+        title: 'Greetings Level',
+        lessons: [
+          {
+            id: 1,
+            title: 'Basic Greetings',
+            description: 'Hello and goodbye phrases',
+            tasks: [
+              {
+                id: 1,
+                question: 'Hello',
+                answer: 'Привет',
+                options: ['Привет', 'Пока', 'Спасибо', 'Пожалуйста']
+              },
+              {
+                id: 2,
+                question: 'Good morning',
+                answer: 'Доброе утро',
+                options: ['Доброе утро', 'Добрый день', 'Добрый вечер', 'Спокойной ночи']
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  food: {
+    title: 'Food',
+    color: '#FF9800',
+    description: 'Food vocabulary',
+    levels: [
+      {
+        id: 'fruits',
+        title: 'Fruits Level',
+        lessons: [
+          { 
+            id: 1, 
+            title: 'Common Fruits', 
+            description: 'Learn fruit names',
+            tasks: [
+              {
+                id: 1,
+                question: 'Apple',
+                answer: 'Яблоко',
+                options: ['Яблоко', 'Апельсин', 'Банан', 'Груша']
+              },
+              {
+                id: 2,
+                question: 'Orange',
+                answer: 'Апельсин',
+                options: ['Апельсин', 'Мандарин', 'Лимон', 'Грейпфрут']
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
 };
 
-const categoryColors = {
-  basics: '#4CAF50',
-  greetings: '#2196F3',
-  food: '#FF9800',
-  travel: '#9C27B0',
-};
+export default function LearningScreen() {
+  const router = useRouter();
+  const { category } = useLocalSearchParams();
+  const [currentView, setCurrentView] = useState<'categories' | 'levels' | 'lessons' | 'tasks'>('categories');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<any>(null);
+  const [selectedLesson, setSelectedLesson] = useState<any>(null);
+  const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
+  const [selectedOption, setSelectedOption] = useState<string | null>(null);
 
-export default function LessonScreen() {
-  const { id } = useLocalSearchParams();
-  const categoryId = id as string;
-  const categoryLessons = lessons[categoryId as keyof typeof lessons] || [];
-  const categoryColor = categoryColors[categoryId as keyof typeof categoryColors] || '#4CAF50';
+  // Initialize view based on URL params
+  useEffect(() => {
+    if (category) {
+      setSelectedCategory(category as string);
+      setCurrentView('levels');
+    }
+  }, [category]);
 
+  // Get current data based on view
+  const currentCategory = selectedCategory ? learningData[selectedCategory as keyof typeof learningData] : null;
+  const currentTasks = selectedLesson?.tasks || [];
+  const currentTask = currentTasks[currentTaskIndex];
+
+  const handleCategorySelect = (categoryId: string) => {
+    setSelectedCategory(categoryId);
+    setCurrentView('levels');
+    router.setParams({ category: categoryId });
+  };
+
+  const handleLevelSelect = (level: any) => {
+    setSelectedLevel(level);
+    setCurrentView('lessons');
+  };
+
+  const handleLessonSelect = (lesson: any) => {
+    setSelectedLesson(lesson);
+    setCurrentView('tasks');
+    setCurrentTaskIndex(0);
+    setSelectedOption(null);
+  };
+
+  const handleAnswer = (option: string) => {
+    setSelectedOption(option);
+    
+    setTimeout(() => {
+      if (currentTaskIndex < currentTasks.length - 1) {
+        setCurrentTaskIndex(currentTaskIndex + 1);
+        setSelectedOption(null);
+      } else {
+        setCurrentView('lessons');
+      }
+    }, 1000);
+  };
+
+  const goBack = () => {
+    if (currentView === 'tasks') {
+      setCurrentView('lessons');
+    } else if (currentView === 'lessons') {
+      setCurrentView('levels');
+    } else if (currentView === 'levels') {
+      setCurrentView('categories');
+      router.setParams({ category: undefined });
+    }
+  };
+
+  // Categories View
+  if (currentView === 'categories') {
+    return (
+      <ScrollView style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Choose a Category</Text>
+          <Text style={styles.subtitle}>Select a category to begin</Text>
+        </View>
+
+        <View style={styles.categoriesContainer}>
+          {Object.entries(learningData).map(([id, category]) => (
+            <TouchableOpacity
+              key={id}
+              style={[styles.categoryCard, { backgroundColor: category.color }]}
+              onPress={() => handleCategorySelect(id)}
+            >
+              <View style={styles.categoryHeader}>
+                <Text style={styles.categoryTitle}>{category.title}</Text>
+                <Ionicons name="chevron-forward" size={24} color="white" />
+              </View>
+              <Text style={styles.categoryDescription}>{category.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Levels View
+  if (currentView === 'levels' && currentCategory) {
+    return (
+      <ScrollView style={styles.container}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#6200ee" />
+          <Text style={styles.backText}>Back to Categories</Text>
+        </TouchableOpacity>
+        
+        <View style={[styles.header, { backgroundColor: currentCategory.color }]}>
+          <Text style={styles.title}>{currentCategory.title}</Text>
+          <Text style={styles.subtitle}>{currentCategory.description}</Text>
+        </View>
+
+        <View style={styles.levelsContainer}>
+          {currentCategory.levels.map((level: any) => (
+            <TouchableOpacity
+              key={level.id}
+              style={[styles.levelCard, { borderLeftColor: currentCategory.color }]}
+              onPress={() => handleLevelSelect(level)}
+            >
+              <View style={styles.levelHeader}>
+                <Text style={styles.levelTitle}>{level.title}</Text>
+                <Ionicons name="chevron-forward" size={24} color="#888" />
+              </View>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Lessons View
+  if (currentView === 'lessons' && selectedLevel) {
+    return (
+      <ScrollView style={styles.container}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#6200ee" />
+          <Text style={styles.backText}>Back to Levels</Text>
+        </TouchableOpacity>
+        
+        <View style={[styles.header, { backgroundColor: currentCategory?.color }]}>
+          <Text style={styles.title}>{selectedLevel.title}</Text>
+          <Text style={styles.subtitle}>{currentCategory?.description}</Text>
+        </View>
+
+        <View style={styles.lessonsContainer}>
+          {selectedLevel.lessons.map((lesson: any) => (
+            <TouchableOpacity
+              key={lesson.id}
+              style={[styles.lessonCard, { borderLeftColor: currentCategory?.color }]}
+              onPress={() => handleLessonSelect(lesson)}
+            >
+              <View style={styles.lessonHeader}>
+                <Text style={styles.lessonTitle}>{lesson.title}</Text>
+                <Ionicons name="chevron-forward" size={24} color="#888" />
+              </View>
+              <Text style={styles.lessonDescription}>{lesson.description}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </ScrollView>
+    );
+  }
+
+  // Tasks View
+  if (currentView === 'tasks' && currentTask) {
+    return (
+      <View style={styles.container}>
+        <TouchableOpacity onPress={goBack} style={styles.backButton}>
+          <Ionicons name="arrow-back" size={24} color="#6200ee" />
+          <Text style={styles.backText}>Back to Lessons</Text>
+        </TouchableOpacity>
+        
+        <View style={styles.taskContainer}>
+          <Text style={styles.taskQuestion}>{currentTask.question}</Text>
+          
+          <View style={styles.optionsContainer}>
+            {currentTask.options.map((option: string) => (
+              <TouchableOpacity
+                key={option}
+                style={[
+                  styles.optionButton,
+                  selectedOption && option === currentTask.answer && styles.correctOption,
+                  selectedOption && option === selectedOption && option !== currentTask.answer && styles.wrongOption
+                ]}
+                onPress={() => !selectedOption && handleAnswer(option)}
+                disabled={!!selectedOption}
+              >
+                <Text style={styles.optionText}>{option}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Fallback view
   return (
-    <ScrollView style={styles.container}>
-      <View style={[styles.header, { backgroundColor: categoryColor }]}>
-        <Text style={styles.title}>{categoryId.charAt(0).toUpperCase() + categoryId.slice(1)}</Text>
-        <Text style={styles.subtitle}>Select a lesson to begin</Text>
-      </View>
-
-      <View style={styles.lessonsContainer}>
-        {categoryLessons.map((lesson) => (
-          <TouchableOpacity
-            key={lesson.id}
-            style={[styles.lessonCard, { borderLeftColor: categoryColor }]}
-          >
-            <View style={styles.lessonHeader}>
-              <Text style={styles.lessonTitle}>{lesson.title}</Text>
-              {lesson.completed && (
-                <Ionicons name="checkmark-circle" size={24} color={categoryColor} />
-              )}
-            </View>
-            <Text style={styles.lessonDescription}>{lesson.description}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <Text>Loading...</Text>
+    </View>
   );
 }
 
@@ -72,10 +365,10 @@ const styles = StyleSheet.create({
   },
   header: {
     padding: 20,
-    paddingTop: 40,
+    paddingTop: 20,
   },
   title: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
     color: 'white',
   },
@@ -84,6 +377,62 @@ const styles = StyleSheet.create({
     color: 'white',
     marginTop: 5,
     opacity: 0.9,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+  },
+  backText: {
+    marginLeft: 5,
+    color: '#6200ee',
+    fontSize: 16,
+  },
+  categoriesContainer: {
+    padding: 16,
+  },
+  categoryCard: {
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 2,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: 'white',
+  },
+  categoryDescription: {
+    fontSize: 14,
+    color: 'white',
+    opacity: 0.9,
+  },
+  levelsContainer: {
+    padding: 16,
+  },
+  levelCard: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    elevation: 2,
+  },
+  levelHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  levelTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
   },
   lessonsContainer: {
     padding: 16,
@@ -95,10 +444,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     borderLeftWidth: 4,
     elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.2,
-    shadowRadius: 1.41,
   },
   lessonHeader: {
     flexDirection: 'row',
@@ -115,4 +460,34 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#666',
   },
-}); 
+  taskContainer: {
+    flex: 1,
+    padding: 20,
+    justifyContent: 'center',
+  },
+  taskQuestion: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  optionsContainer: {
+    marginTop: 20,
+  },
+  optionButton: {
+    backgroundColor: '#f0f0f0',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+    alignItems: 'center',
+  },
+  optionText: {
+    fontSize: 16,
+  },
+  correctOption: {
+    backgroundColor: '#4CAF50',
+  },
+  wrongOption: {
+    backgroundColor: '#F44336',
+  },
+});
