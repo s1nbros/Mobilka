@@ -96,4 +96,30 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-} 
+}
+
+export const getXP = async () => {
+  const xp = await AsyncStorage.getItem('xp');
+  return xp ? parseInt(xp, 10) : 0;
+};
+
+export const setXP = async (xp) => {
+  await AsyncStorage.setItem('xp', xp.toString());
+};
+
+export const getStreak = async () => {
+  const streak = await AsyncStorage.getItem('streak');
+  return streak ? parseInt(streak, 10) : 0;
+};
+
+export const setStreak = async (streak) => {
+  await AsyncStorage.setItem('streak', streak.toString());
+};
+
+export const getLastActiveDate = async () => {
+  return await AsyncStorage.getItem('lastActiveDate');
+};
+
+export const setLastActiveDate = async (date) => {
+  await AsyncStorage.setItem('lastActiveDate', date);
+}; 

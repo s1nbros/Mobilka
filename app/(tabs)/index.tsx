@@ -1,7 +1,10 @@
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ProgressBar from '@/components/ProgressBar';
+import { getXP, getStreak } from '@/utils/progressStorage'; // adjust path if needed
+import { useFocusEffect } from '@react-navigation/native';
 
 const categories = [
   {
@@ -44,6 +47,26 @@ const categories = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const [xp, setXPState] = useState<number>(0);
+  const [streak, setStreakState] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchProgress = async () => {
+      setXPState(await getXP());
+      setStreakState(await getStreak());
+    };
+    fetchProgress();
+  }, []);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      const fetchProgress = async () => {
+        setXPState(await getXP());
+        setStreakState(await getStreak());
+      };
+      fetchProgress();
+    }, [])
+  );
 
   const handleCategoryPress = (categoryId: string) => {
     console.log('Navigating to lesson:', categoryId);
@@ -58,11 +81,11 @@ export default function HomeScreen() {
         
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{streak}</Text>
             <Text style={styles.statLabel}>Days Streak</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{xp}</Text>
             <Text style={styles.statLabel}>XP Earned</Text>
           </View>
           <View style={styles.statItem}>

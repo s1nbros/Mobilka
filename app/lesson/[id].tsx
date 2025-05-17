@@ -3,8 +3,13 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState, useRef, useEffect } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import LessonExercise from '@/components/LessonExercise';
+import {
+  getXP, setXP,
+  getStreak, setStreak,
+  getLastActiveDate, setLastActiveDate
+} from '@/utils/progressStorage'; // adjust path if needed
 
-// Sample lesson data
+
 const lessonData = {
   basics: {
     title: 'Basics',
@@ -60,6 +65,12 @@ export default function LessonScreen() {
     console.log('Lesson ID:', id);
   }, [id]);
 
+  useEffect(() => {
+    if (completed) {
+      handleLessonComplete();
+    }
+  }, [completed]);
+
   const categoryId = id as string;
   const lesson = lessonData[categoryId as keyof typeof lessonData];
   const totalExercises = lesson?.exercises.length || 0;
@@ -83,6 +94,31 @@ export default function LessonScreen() {
 
   const handleContinue = () => {
     router.back();
+  };
+
+  const handleLessonComplete = async (): Promise<void> => {
+    const currentXP = await getXP();
+    await setXP(currentXP + 10);
+
+    const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    const lastActive = await getLastActiveDate();
+
+    let streak = await getStreak();
+    if (lastActive === today) {
+      // already counted today
+    } else if (
+      lastActive &&
+      (new Date(today).getTime() - new Date(lastActive).getTime()) / (1000 * 60 * 60 * 24) === 1
+    ) {
+      // consecutive day
+      streak += 1;
+      await setStreak(streak);
+    } else {
+      // missed a day or first time
+      streak = 1;
+      await setStreak(streak);
+    }
+    await setLastActiveDate(today);
   };
 
   if (!lesson) {
