@@ -100,7 +100,7 @@ export default function LessonScreen() {
     const currentXP = await getXP();
     await setXP(currentXP + 10);
 
-    const today = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+    const today = new Date().toISOString().slice(0, 10); 
     const lastActive = await getLastActiveDate();
 
     let streak = await getStreak();
@@ -114,7 +114,7 @@ export default function LessonScreen() {
       streak += 1;
       await setStreak(streak);
     } else {
-      // missed a day or first time
+
       streak = 1;
       await setStreak(streak);
     }
