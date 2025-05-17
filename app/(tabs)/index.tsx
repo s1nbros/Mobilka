@@ -40,6 +40,15 @@ const categories = [
     totalLessons: 15,
     completedLessons: 0,
   },
+  {
+    id: 'colors',
+    title: 'Colors',
+    description: 'More colors',
+    icon: 'rainbow-outline',
+    color: '#FF0000',
+    totalLessons: 15,
+    completedLessons: 0,
+  },
 ];
 
 export default function HomeScreen() {
