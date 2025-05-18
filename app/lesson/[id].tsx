@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView, Animated } from '
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useState, useRef, useEffect } from 'react';
+import { useProgress } from '@/contexts/LessonProgressContext';
 
 const learningData = {
   basics: {
@@ -161,32 +162,34 @@ const learningData = {
 
 export default function LearningScreen() {
   const router = useRouter();
-  const { category } = useLocalSearchParams();
-  const [currentView, setCurrentView] = useState<'categories' | 'levels' | 'lessons' | 'tasks'>('categories');
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const params = useLocalSearchParams();
+  const { addXP, completeLesson, isLessonCompleted } = useProgress();
+  const [currentView, setCurrentView] = useState<'levels' | 'lessons' | 'tasks' | 'completion'>('levels');
   const [selectedLevel, setSelectedLevel] = useState<any>(null);
   const [selectedLesson, setSelectedLesson] = useState<any>(null);
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
-
-  // Initialize view based on URL params
-  useEffect(() => {
-    if (category) {
-      setSelectedCategory(category as string);
-      setCurrentView('levels');
-    }
-  }, [category]);
+  const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [xpEarned, setXpEarned] = useState(0);
+  const [showConfetti, setShowConfetti] = useState(false);
 
   // Get current data based on view
-  const currentCategory = selectedCategory ? learningData[selectedCategory as keyof typeof learningData] : null;
+  const categoryId = params.id as string;
+  const currentCategory = categoryId ? learningData[categoryId as keyof typeof learningData] : null;
   const currentTasks = selectedLesson?.tasks || [];
   const currentTask = currentTasks[currentTaskIndex];
 
-  const handleCategorySelect = (categoryId: string) => {
-    setSelectedCategory(categoryId);
-    setCurrentView('levels');
-    router.setParams({ category: categoryId });
-  };
+  // Initialize view based on URL params
+  useEffect(() => {
+    console.log('Category ID:', categoryId);
+    console.log('Current Category:', currentCategory);
+    
+    if (!categoryId || !currentCategory) {
+      console.error('Invalid category:', categoryId);
+      router.back();
+      return;
+    }
+  }, [categoryId, currentCategory]);
 
   const handleLevelSelect = (level: any) => {
     setSelectedLevel(level);
@@ -203,14 +206,36 @@ export default function LearningScreen() {
   const handleAnswer = (option: string) => {
     setSelectedOption(option);
     
+    const isCorrect = option === currentTask.answer;
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+    }
+    
     setTimeout(() => {
       if (currentTaskIndex < currentTasks.length - 1) {
         setCurrentTaskIndex(currentTaskIndex + 1);
         setSelectedOption(null);
       } else {
-        setCurrentView('lessons');
+        // Calculate XP based on performance
+        const earned = Math.round((correctAnswers / currentTasks.length) * 10);
+        setXpEarned(earned);
+        addXP(earned);
+        
+        // Complete the lesson
+        const lessonId = `${categoryId}-${selectedLevel.id}-${selectedLesson.id}`;
+        completeLesson(lessonId);
+        
+        // Show completion screen
+        setShowConfetti(true);
+        setCurrentView('completion');
       }
     }, 1000);
+  };
+
+  const handleContinue = () => {
+    setShowConfetti(false);
+    setCurrentView('lessons');
+    setCorrectAnswers(0);
   };
 
   const goBack = () => {
@@ -219,46 +244,34 @@ export default function LearningScreen() {
     } else if (currentView === 'lessons') {
       setCurrentView('levels');
     } else if (currentView === 'levels') {
-      setCurrentView('categories');
-      router.setParams({ category: undefined });
+      router.back();
     }
   };
 
-  // Categories View
-  if (currentView === 'categories') {
+  if (!currentCategory) {
     return (
-      <ScrollView style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Choose a Category</Text>
-          <Text style={styles.subtitle}>Select a category to begin</Text>
+      <View style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Ionicons name="alert-circle" size={50} color="#FF5252" />
+          <Text style={styles.loadingText}>Invalid category</Text>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => router.back()}
+          >
+            <Text style={styles.backText}>Go Back</Text>
+          </TouchableOpacity>
         </View>
-
-        <View style={styles.categoriesContainer}>
-          {Object.entries(learningData).map(([id, category]) => (
-            <TouchableOpacity
-              key={id}
-              style={[styles.categoryCard, { backgroundColor: category.color }]}
-              onPress={() => handleCategorySelect(id)}
-            >
-              <View style={styles.categoryHeader}>
-                <Text style={styles.categoryTitle}>{category.title}</Text>
-                <Ionicons name="chevron-forward" size={24} color="white" />
-              </View>
-              <Text style={styles.categoryDescription}>{category.description}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </ScrollView>
+      </View>
     );
   }
 
   // Levels View
-  if (currentView === 'levels' && currentCategory) {
+  if (currentView === 'levels') {
     return (
       <ScrollView style={styles.container}>
         <TouchableOpacity onPress={goBack} style={styles.backButton}>
           <Ionicons name="arrow-back" size={24} color="#6200ee" />
-          <Text style={styles.backText}>Back to Categories</Text>
+          <Text style={styles.backText}>Back to Home</Text>
         </TouchableOpacity>
         
         <View style={[styles.header, { backgroundColor: currentCategory.color }]}>
@@ -345,6 +358,49 @@ export default function LearningScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+      </View>
+    );
+  }
+
+  // Completion View
+  if (currentView === 'completion') {
+    return (
+      <View style={styles.container}>
+        <View style={styles.completionContainer}>
+          {showConfetti && (
+            <View style={styles.confettiContainer}>
+              <Ionicons name="star" size={40} color="#FFD700" style={styles.confetti} />
+              <Ionicons name="star" size={30} color="#FFD700" style={[styles.confetti, styles.confetti2]} />
+              <Ionicons name="star" size={35} color="#FFD700" style={[styles.confetti, styles.confetti3]} />
+            </View>
+          )}
+          
+          <View style={styles.completionHeader}>
+            <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+            <Text style={styles.completionTitle}>Great job!</Text>
+            <Text style={styles.completionSubtitle}>You completed the lesson</Text>
+          </View>
+
+          <View style={styles.statsContainer}>
+            <View style={styles.statItem}>
+              <Ionicons name="trophy" size={24} color="#FFD700" />
+              <Text style={styles.statNumber}>+{xpEarned}</Text>
+              <Text style={styles.statLabel}>XP Earned</Text>
+            </View>
+            <View style={styles.statItem}>
+              <Ionicons name="flame" size={24} color="#FF6B6B" />
+              <Text style={styles.statNumber}>+1</Text>
+              <Text style={styles.statLabel}>Day Streak</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.continueButton}
+            onPress={handleContinue}
+          >
+            <Text style={styles.continueButtonText}>Continue</Text>
+          </TouchableOpacity>
         </View>
       </View>
     );
@@ -489,5 +545,97 @@ const styles = StyleSheet.create({
   },
   wrongOption: {
     backgroundColor: '#F44336',
+  },
+  completionContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+    backgroundColor: '#fff',
+  },
+  completionHeader: {
+    alignItems: 'center',
+    marginBottom: 40,
+  },
+  completionTitle: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 20,
+  },
+  completionSubtitle: {
+    fontSize: 18,
+    color: '#666',
+    marginTop: 10,
+  },
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 40,
+  },
+  statItem: {
+    alignItems: 'center',
+    backgroundColor: '#f8f8f8',
+    padding: 20,
+    borderRadius: 12,
+    width: '45%',
+  },
+  statNumber: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginTop: 10,
+  },
+  statLabel: {
+    fontSize: 14,
+    color: '#666',
+    marginTop: 5,
+  },
+  continueButton: {
+    backgroundColor: '#4CAF50',
+    paddingHorizontal: 40,
+    paddingVertical: 15,
+    borderRadius: 25,
+    marginTop: 20,
+  },
+  continueButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  confettiContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    pointerEvents: 'none',
+  },
+  confetti: {
+    position: 'absolute',
+    top: '20%',
+    left: '20%',
+  },
+  confetti2: {
+    top: '30%',
+    left: '60%',
+  },
+  confetti3: {
+    top: '40%',
+    left: '40%',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 20,
+    fontSize: 18,
+    color: '#666',
+    textAlign: 'center',
   },
 });

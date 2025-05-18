@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Image, Alert, Platform } from 'react-native';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProgress } from '@/contexts/LessonProgressContext';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
@@ -8,6 +9,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
   const { user, signOut } = useAuth();
+  const { xp, streak } = useProgress();
   const router = useRouter();
   const [profileImage, setProfileImage] = useState<string | null>(null);
 
@@ -89,15 +91,17 @@ export default function ProfileScreen() {
 
       <View style={styles.statsContainer}>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{streak}</Text>
           <Text style={styles.statLabel}>Days Streak</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>0</Text>
+          <Text style={styles.statNumber}>{xp}</Text>
           <Text style={styles.statLabel}>XP Earned</Text>
         </View>
         <View style={styles.statItem}>
-          <Text style={styles.statNumber}>0%</Text>
+          <Text style={styles.statNumber}>
+            {Math.round((xp / 1000) * 100)}%
+          </Text>
           <Text style={styles.statLabel}>Mastery</Text>
         </View>
       </View>

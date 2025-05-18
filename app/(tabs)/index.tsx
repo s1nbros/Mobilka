@@ -2,6 +2,7 @@ import { StyleSheet, View, Text, TouchableOpacity, ScrollView } from 'react-nati
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import ProgressBar from '@/components/ProgressBar';
+import { useProgress } from '@/contexts/LessonProgressContext';
 
 const categories = [
   {
@@ -44,10 +45,14 @@ const categories = [
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { xp, streak } = useProgress();
 
   const handleCategoryPress = (categoryId: string) => {
     console.log('Navigating to lesson:', categoryId);
-    router.push(`/lesson/${categoryId}`);
+    router.push({
+      pathname: '/lesson/[id]',
+      params: { id: categoryId }
+    });
   };
 
   return (
@@ -58,15 +63,17 @@ export default function HomeScreen() {
         
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{streak}</Text>
             <Text style={styles.statLabel}>Days Streak</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0</Text>
+            <Text style={styles.statNumber}>{xp}</Text>
             <Text style={styles.statLabel}>XP Earned</Text>
           </View>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>0%</Text>
+            <Text style={styles.statNumber}>
+              {Math.round((xp / 1000) * 100)}%
+            </Text>
             <Text style={styles.statLabel}>Mastery</Text>
           </View>
         </View>
