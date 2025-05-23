@@ -9,6 +9,7 @@ interface ProgressContextType {
   addXP: (amount: number) => void;
   completeLesson: (lessonId: string) => void;
   isLessonCompleted: (lessonId: string) => boolean;
+  getCompletedLessonsForCategory: (categoryId: string) => number;
 }
 
 const ProgressContext = createContext<ProgressContextType | undefined>(undefined);
@@ -94,6 +95,10 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     return completedLessons.includes(lessonId);
   };
 
+  const getCompletedLessonsForCategory = (categoryId: string) => {
+    return completedLessons.filter(lessonId => lessonId.startsWith(categoryId)).length;
+  };
+
   return (
     <ProgressContext.Provider
       value={{
@@ -104,6 +109,7 @@ export const ProgressProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         addXP,
         completeLesson,
         isLessonCompleted,
+        getCompletedLessonsForCategory,
       }}
     >
       {children}

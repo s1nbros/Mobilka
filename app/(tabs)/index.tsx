@@ -11,8 +11,7 @@ const categories = [
     description: 'Learn basic Russian words and phrases',
     icon: 'book-outline',
     color: '#4CAF50',
-    totalLessons: 10,
-    completedLessons: 0,
+    totalLessons: 4,
   },
   {
     id: 'greetings',
@@ -20,8 +19,7 @@ const categories = [
     description: 'Common greetings and introductions',
     icon: 'chatbubble-outline',
     color: '#2196F3',
-    totalLessons: 8,
-    completedLessons: 0,
+    totalLessons: 1,
   },
   {
     id: 'food',
@@ -29,8 +27,7 @@ const categories = [
     description: 'Food vocabulary and restaurant phrases',
     icon: 'restaurant-outline',
     color: '#FF9800',
-    totalLessons: 12,
-    completedLessons: 0,
+    totalLessons: 1,
   },
   {
     id: 'travel',
@@ -38,14 +35,13 @@ const categories = [
     description: 'Essential travel phrases and vocabulary',
     icon: 'airplane-outline',
     color: '#9C27B0',
-    totalLessons: 15,
-    completedLessons: 0,
+    totalLessons: 4,
   },
 ];
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { xp, streak } = useProgress();
+  const { xp, streak, getCompletedLessonsForCategory } = useProgress();
 
   const handleCategoryPress = (categoryId: string) => {
     console.log('Navigating to lesson:', categoryId);
@@ -80,21 +76,24 @@ export default function HomeScreen() {
       </View>
 
       <View style={styles.categoriesContainer}>
-        {categories.map((category) => (
-          <TouchableOpacity
-            key={category.id}
-            style={[styles.categoryCard, { backgroundColor: category.color }]}
-            onPress={() => handleCategoryPress(category.id)}
-          >
-            <Ionicons name={category.icon as any} size={32} color="white" />
-            <Text style={styles.categoryTitle}>{category.title}</Text>
-            <Text style={styles.categoryDescription}>{category.description}</Text>
-            <ProgressBar 
-              progress={category.completedLessons} 
-              total={category.totalLessons} 
-            />
-          </TouchableOpacity>
-        ))}
+        {categories.map((category) => {
+          const completedLessons = getCompletedLessonsForCategory(category.id);
+          return (
+            <TouchableOpacity
+              key={category.id}
+              style={[styles.categoryCard, { backgroundColor: category.color }]}
+              onPress={() => handleCategoryPress(category.id)}
+            >
+              <Ionicons name={category.icon as any} size={32} color="white" />
+              <Text style={styles.categoryTitle}>{category.title}</Text>
+              <Text style={styles.categoryDescription}>{category.description}</Text>
+              <ProgressBar 
+                progress={completedLessons} 
+                total={category.totalLessons} 
+              />
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </ScrollView>
   );

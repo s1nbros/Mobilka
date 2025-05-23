@@ -425,19 +425,35 @@ export default function LearningScreen() {
         </View>
 
         <View style={styles.lessonsContainer}>
-          {selectedLevel.lessons.map((lesson: any) => (
-            <TouchableOpacity
-              key={lesson.id}
-              style={[styles.lessonCard, { borderLeftColor: currentCategory?.color }]}
-              onPress={() => handleLessonSelect(lesson)}
-            >
-              <View style={styles.lessonHeader}>
-                <Text style={styles.lessonTitle}>{lesson.title}</Text>
-                <Ionicons name="chevron-forward" size={24} color="#888" />
-              </View>
-              <Text style={styles.lessonDescription}>{lesson.description}</Text>
-            </TouchableOpacity>
-          ))}
+          {selectedLevel.lessons.map((lesson: any) => {
+            const lessonId = `${categoryId}-${selectedLevel.id}-${lesson.id}`;
+            const isCompleted = isLessonCompleted(lessonId);
+            
+            return (
+              <TouchableOpacity
+                key={lesson.id}
+                style={[
+                  styles.lessonCard, 
+                  { borderLeftColor: currentCategory?.color },
+                  isCompleted && styles.completedLessonCard
+                ]}
+                onPress={() => handleLessonSelect(lesson)}
+              >
+                <View style={styles.lessonHeader}>
+                  <View style={styles.lessonTitleContainer}>
+                    <Text style={styles.lessonTitle}>{lesson.title}</Text>
+                    {isCompleted && (
+                      <View style={styles.completionBadge}>
+                        <Ionicons name="checkmark-circle" size={20} color="#4CAF50" />
+                      </View>
+                    )}
+                  </View>
+                  <Ionicons name="chevron-forward" size={24} color="#888" />
+                </View>
+                <Text style={styles.lessonDescription}>{lesson.description}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </ScrollView>
     );
@@ -619,6 +635,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  lessonTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
   lessonTitle: {
     fontSize: 18,
     fontWeight: 'bold',
@@ -750,5 +771,15 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#666',
     textAlign: 'center',
+  },
+  completionBadge: {
+    marginLeft: 8,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 12,
+    padding: 2,
+  },
+  completedLessonCard: {
+    backgroundColor: '#F8F8F8',
+    borderLeftWidth: 6,
   },
 });
