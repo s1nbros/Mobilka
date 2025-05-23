@@ -157,6 +157,119 @@ const learningData = {
         ]
       }
     ]
+  },
+  travel: {
+    title: 'Travel',
+    color: '#9C27B0',
+    description: 'Essential travel phrases and vocabulary',
+    levels: [
+      {
+        id: 'basic-travel',
+        title: 'Travel Basics',
+        lessons: [
+          {
+            id: 1,
+            title: 'At the Airport',
+            description: 'Essential airport phrases',
+            tasks: [
+              {
+                id: 1,
+                question: 'Where is the check-in counter?',
+                answer: 'Где стойка регистрации?',
+                options: ['Где стойка регистрации?', 'Где выход?', 'Где туалет?', 'Где кафе?']
+              },
+              {
+                id: 2,
+                question: 'I have a connecting flight',
+                answer: 'У меня стыковочный рейс',
+                options: ['У меня стыковочный рейс', 'У меня билет', 'У меня багаж', 'У меня паспорт']
+              },
+              {
+                id: 3,
+                question: 'Is this the gate for flight 123?',
+                answer: 'Это выход на рейс 123?',
+                options: ['Это выход на рейс 123?', 'Это мой рейс?', 'Это мой билет?', 'Это мой багаж?']
+              }
+            ]
+          },
+          {
+            id: 2,
+            title: 'Hotel Check-in',
+            description: 'Hotel vocabulary and phrases',
+            tasks: [
+              {
+                id: 1,
+                question: 'I have a reservation',
+                answer: 'У меня есть бронь',
+                options: ['У меня есть бронь', 'У меня есть комната', 'У меня есть ключ', 'У меня есть паспорт']
+              },
+              {
+                id: 2,
+                question: 'What time is breakfast?',
+                answer: 'Во сколько завтрак?',
+                options: ['Во сколько завтрак?', 'Где завтрак?', 'Когда завтрак?', 'Какой завтрак?']
+              },
+              {
+                id: 3,
+                question: 'Is there WiFi in the room?',
+                answer: 'В номере есть WiFi?',
+                options: ['В номере есть WiFi?', 'В номере есть телевизор?', 'В номере есть кондиционер?', 'В номере есть ванная?']
+              }
+            ]
+          },
+          {
+            id: 3,
+            title: 'Getting Around',
+            description: 'Transportation and directions',
+            tasks: [
+              {
+                id: 1,
+                question: 'How do I get to the city center?',
+                answer: 'Как добраться до центра?',
+                options: ['Как добраться до центра?', 'Где центр?', 'Какой центр?', 'Когда центр?']
+              },
+              {
+                id: 2,
+                question: 'Is this the right bus?',
+                answer: 'Это правильный автобус?',
+                options: ['Это правильный автобус?', 'Это мой автобус?', 'Это автобус?', 'Это метро?']
+              },
+              {
+                id: 3,
+                question: 'How much is the taxi to the hotel?',
+                answer: 'Сколько стоит такси до отеля?',
+                options: ['Сколько стоит такси до отеля?', 'Где такси?', 'Когда такси?', 'Какой такси?']
+              }
+            ]
+          },
+          {
+            id: 4,
+            title: 'Sightseeing',
+            description: 'Tourist attractions and activities',
+            tasks: [
+              {
+                id: 1,
+                question: 'What time does the museum open?',
+                answer: 'Во сколько открывается музей?',
+                options: ['Во сколько открывается музей?', 'Где музей?', 'Какой музей?', 'Когда музей?']
+              },
+              {
+                id: 2,
+                question: 'Can you take a photo of us?',
+                answer: 'Можете сфотографировать нас?',
+                options: ['Можете сфотографировать нас?', 'Где фото?', 'Когда фото?', 'Какой фото?']
+              },
+              {
+                id: 3,
+                question: 'What is the entrance fee?',
+                answer: 'Сколько стоит вход?',
+                options: ['Сколько стоит вход?', 'Где вход?', 'Когда вход?', 'Какой вход?']
+              }
+            ]
+          }
+        ]
+      }
+    ]
   }
 };
 
